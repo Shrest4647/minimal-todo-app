@@ -13,7 +13,7 @@ class DaySelector extends StatefulWidget {
   });
 
   @override
-  _DaySelectorState createState() => _DaySelectorState();
+  State<DaySelector> createState() => _DaySelectorState();
 }
 
 class _DaySelectorState extends State<DaySelector> {
@@ -126,7 +126,8 @@ class _DaySelectorState extends State<DaySelector> {
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
-                                    color: isActive ? Colors.white : Colors.black,
+                                    color:
+                                        isActive ? Colors.white : Colors.black,
                                   ),
                                 ),
                                 const SizedBox(height: 4),
@@ -134,7 +135,8 @@ class _DaySelectorState extends State<DaySelector> {
                                   DateFormat('E').format(day)[0],
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: isActive ? Colors.white : Colors.black,
+                                    color:
+                                        isActive ? Colors.white : Colors.black,
                                   ),
                                 ),
                               ],

@@ -26,7 +26,7 @@ class TodoListScreen extends StatefulWidget {
   const TodoListScreen({super.key});
 
   @override
-  _TodoListScreenState createState() => _TodoListScreenState();
+  State<TodoListScreen> createState() => _TodoListScreenState();
 }
 
 class _TodoListScreenState extends State<TodoListScreen> {
@@ -55,7 +55,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
       },
       onUpgrade: (db, oldVersion, newVersion) {
         if (oldVersion < 2) {
-          print("Upgrading database from version $oldVersion to $newVersion");
+          // "Upgrading database from version $oldVersion to $newVersion"
         }
       },
     );
