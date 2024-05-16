@@ -1,16 +1,69 @@
-# myapp
+# Minimalistic Todo App in Flutter
 
-A new Flutter project.
+# Todo App
 
-## Getting Started
+> A minimalistic todo app built with Flutter.
 
-This project is a starting point for a Flutter application.
+## Installation
 
-A few resources to get you started if this is your first Flutter project:
+1. Clone the repository:
+```bash
+    git clone https://github.com/<username>/minimalistic_todo_app.git
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+2. Install the dependencies:
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```bash
+    cd todo_app
+    flutter pub get
+```
+
+3. Run the app:
+
+```bash
+    cd todo_app
+    flutter run
+```
+
+4. Add a new task:
+
+```bash
+    Tap the "+" button.
+    Enter the task name.
+    Tap the "Add" button.
+```
+
+5. Mark a task as complete:
+
+```bash
+    Tap the checkbox next to the task.
+```
+
+6. Delete a task:
+
+```bash
+    Swipe the task to the left.
+    Tap the "Delete" button.
+```
+
+## Usage
+
+1. Open the app
+ on your device or emulator.
+2. Tap the "+" button to add a new task.
+3. Enter the task name and tap "Add".
+4. The task will be added to the list.
+5. Tap a task to mark it as complete.
+6. Tap the "Clear" button to remove all completed tasks.
+
+## Contribution
+
+1. Fork the repository.
+2. Create a new branch for your changes.
+3. Make your changes and commit them to your branch.
+4. Push your changes to your fork.
+5. Create a pull request to the main repository.
+
+## License
+
+This project is licensed under the MIT License.
