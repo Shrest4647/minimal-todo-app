@@ -295,16 +295,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Padding(
-                        padding: EdgeInsets.only(
-                          left: 8.0,
-                        ),
-                        child: Icon(
-                          Icons.notification_important,
-                          color: Colors.pinkAccent,
-                          size: 16,
-                        ),
-                      ),
+                      // const Padding(
+                      //   padding: EdgeInsets.only(
+                      //     left: 8.0,
+                      //   ),
+                      //   child: Icon(
+                      //     Icons.notification_important,
+                      //     color: Colors.pinkAccent,
+                      //     size: 16,
+                      //   ),
+                      // ),
                     ],
                   ),
                   trailing: IconButton(
