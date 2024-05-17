@@ -69,13 +69,23 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   Future<void> _loadTodos() async {
+    int twodaysAgo = DateTime(activeDate.year, activeDate.month, activeDate.day)
+            .subtract(const Duration(days: 2))
+            .millisecondsSinceEpoch ~/
+        1000;
+    int threeDaysAfter =
+        DateTime(activeDate.year, activeDate.month, activeDate.day)
+                .add(const Duration(days: 3))
+                .millisecondsSinceEpoch ~/
+            1000;
     final List<Map<String, dynamic>> maps = await _database!.query('todos',
-        orderBy: "deadline desc",
-        where: "deadline between ? and ?",
+        orderBy: "completed, created desc",
+        where: "deadline between ? and ? or created between ? and ?",
         whereArgs: [
-          activeDate.subtract(const Duration(days: 2)).millisecondsSinceEpoch ~/
-              1000,
-          activeDate.add(const Duration(days: 3)).millisecondsSinceEpoch ~/ 1000
+          twodaysAgo,
+          threeDaysAfter,
+          twodaysAgo,
+          threeDaysAfter,
         ]);
     setState(() {
       _todos.clear();
@@ -351,8 +361,6 @@ class _TodoListScreenState extends State<TodoListScreen> {
                     children: [
                       TextField(
                         controller: taskController,
-              
-                        
                         minLines: 1,
                         keyboardType: TextInputType.multiline,
                         decoration: const InputDecoration(
