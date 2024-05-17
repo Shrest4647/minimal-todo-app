@@ -122,7 +122,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
         'task': task,
         'completed': 0,
         'deadline': (deadline ?? DateTime.now())
-                .add(const Duration(hours: 2))
+                .add(const Duration(hours: 1))
                 .millisecondsSinceEpoch ~/
             1000,
         'created': DateTime.now().millisecondsSinceEpoch ~/ 1000,
@@ -362,6 +362,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                       TextField(
                         controller: taskController,
                         minLines: 1,
+                        textCapitalization: TextCapitalization.sentences,
                         keyboardType: TextInputType.multiline,
                         decoration: const InputDecoration(
                           hintText: 'Enter task',
