@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:minimalistic_todo_app/components/dayselector.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:easy_date_timeline/easy_date_timeline.dart';
+import 'package:date_field/date_field.dart';
 
 void main() => runApp(const MyApp());
 
@@ -16,6 +17,7 @@ class MyApp extends StatelessWidget {
       title: 'Todo List App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        fontFamily: GoogleFonts.satisfy().fontFamily,
       ),
       home: const TodoListScreen(),
     );
@@ -33,7 +35,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
   final List<Todo> _todos = [];
   late DateTime activeDate;
   Database? _database;
-
+  final _easyDateTimelineController = EasyInfiniteDateTimelineController();
+  TextEditingController taskController = TextEditingController();
+  DateTime? deadline = DateTime.now().add(const Duration(hours: 2));
+  bool? reminder = true;
   @override
   void initState() {
     super.initState();
@@ -64,8 +69,14 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   Future<void> _loadTodos() async {
-    final List<Map<String, dynamic>> maps =
-        await _database!.query('todos', orderBy: "deadline desc");
+    final List<Map<String, dynamic>> maps = await _database!.query('todos',
+        orderBy: "deadline desc",
+        where: "deadline between ? and ?",
+        whereArgs: [
+          activeDate.subtract(const Duration(days: 2)).millisecondsSinceEpoch ~/
+              1000,
+          activeDate.add(const Duration(days: 3)).millisecondsSinceEpoch ~/ 1000
+        ]);
     setState(() {
       _todos.clear();
       _todos.addAll(
@@ -90,13 +101,17 @@ class _TodoListScreenState extends State<TodoListScreen> {
     });
   }
 
-  Future<void> _addTodo(String task) async {
+  Future<void> _addTodo({
+    required String task,
+    DateTime? deadline,
+    bool? reminder,
+  }) async {
     await _database!.insert(
       'todos',
       {
         'task': task,
         'completed': 0,
-        'deadline': DateTime.now()
+        'deadline': (deadline ?? DateTime.now())
                 .add(const Duration(hours: 2))
                 .millisecondsSinceEpoch ~/
             1000,
@@ -135,6 +150,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   @override
+  void dispose() {
+    _database?.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -150,13 +171,53 @@ class _TodoListScreenState extends State<TodoListScreen> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DaySelector(
-            defaultActiveDay: activeDate,
-            onActiveDayChanged: (date) {
-              setState(() {
-                activeDate = date;
-              });
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    _easyDateTimelineController.animateToCurrentData();
+                  },
+                  child: Text(
+                    "Today",
+                    textAlign: TextAlign.left,
+                    style: GoogleFonts.satisfy().copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    _easyDateTimelineController.animateToDate(activeDate);
+                  },
+                  child: Text(
+                    DateFormat(DateFormat.ABBR_MONTH_WEEKDAY_DAY)
+                        .format(activeDate),
+                    textAlign: TextAlign.left,
+                    style: GoogleFonts.satisfy().copyWith(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          EasyInfiniteDateTimeLine(
+            selectionMode: const SelectionMode.autoCenter(),
+            controller: _easyDateTimelineController,
+            focusDate: activeDate,
+            firstDate: DateTime(2000, 1, 1),
+            lastDate: DateTime.now().add(const Duration(days: 30)),
+            onDateChange: (selectedDate) {
+              activeDate = selectedDate;
+              _loadTodos();
+              setState(() {});
             },
+            showTimelineHeader: false,
           ),
           const SizedBox(height: 10),
           Padding(
@@ -225,11 +286,23 @@ class _TodoListScreenState extends State<TodoListScreen> {
                         ),
                       ),
                       Text(
-                        DateFormat(DateFormat.ABBR_MONTH_WEEKDAY_DAY)
+                        DateFormat(
+                                '${DateFormat.ABBR_MONTH_DAY} ${DateFormat.HOUR24_MINUTE}')
                             .format(todo.deadline!),
                         style: GoogleFonts.caveat().copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Padding(
+                        padding: EdgeInsets.only(
+                          left: 8.0,
+                        ),
+                        child: Icon(
+                          Icons.notification_important,
+                          color: Colors.pinkAccent,
+                          size: 16,
                         ),
                       ),
                     ],
@@ -259,54 +332,101 @@ class _TodoListScreenState extends State<TodoListScreen> {
   }
 
   void _showAddTodoDialog(BuildContext context) {
-    TextEditingController taskController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Add Todo'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: [
-              TextField(
-                controller: taskController,
-                maxLines: 2,
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  hintText: 'Enter task',
+        return SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                title: Text(
+                  'Add Todo',
+                  style: GoogleFonts.satisfy(),
                 ),
-              ),
-              const SizedBox(height: 10),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Checkbox(
-                    value: false,
-                    onChanged: null,
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    TextField(
+                      controller: taskController,
+                      minLines: 1,
+                      style: GoogleFonts.caveat(),
+                      keyboardType: TextInputType.multiline,
+                      decoration: InputDecoration(
+                        hintStyle: GoogleFonts.caveat(),
+                        hintText: 'Enter task',
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    DateTimeFormField(
+                      initialValue: deadline,
+                      dateFormat: DateFormat(
+                        '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
+                      ),
+                      style: GoogleFonts.caveat(
+                        color: Colors.black54,
+                        fontSize: 16,
+                      ),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter Date',
+                      ),
+                      firstDate: DateTime.now().add(const Duration(minutes: 1)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
+                      initialPickerDateTime: deadline,
+                      onChanged: (DateTime? value) {
+                        setState(() {
+                          deadline = value;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Checkbox(
+                          value: reminder,
+                          activeColor: Colors.green,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              reminder = value;
+                            });
+                          },
+                        ),
+                        Text(
+                          'Reminder',
+                          style: GoogleFonts.caveat().copyWith(
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      taskController.clear();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancel'),
                   ),
-                  Text('Add Deadline'),
+                  TextButton(
+                    onPressed: () {
+                      _addTodo(
+                        task: taskController.text,
+                        deadline: deadline,
+                        reminder: reminder,
+                      );
+                      taskController.clear();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Add'),
+                  ),
                 ],
-              )
-            ],
+              );
+            },
           ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                _addTodo(taskController.text);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
         );
       },
     );
