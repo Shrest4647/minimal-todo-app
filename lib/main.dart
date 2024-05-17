@@ -335,96 +335,98 @@ class _TodoListScreenState extends State<TodoListScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return SingleChildScrollView(
-          child: StatefulBuilder(
-            builder: (context, setState) {
-              return AlertDialog(
-                title: Text(
-                  'Add Todo',
-                  style: GoogleFonts.satisfy(),
-                ),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: taskController,
-    
-                      
-                      minLines: 1,
-                      keyboardType: TextInputType.multiline,
-                      decoration: const InputDecoration(
-                        hintText: 'Enter task',
+        return Center(
+          child: SingleChildScrollView(
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return AlertDialog(
+                  title: Text(
+                    'Add Todo',
+                    style: GoogleFonts.satisfy(),
+                  ),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      TextField(
+                        controller: taskController,
+              
+                        
+                        minLines: 1,
+                        keyboardType: TextInputType.multiline,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter task',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
-                    reminder == true
-                        ? DateTimeFormField(
-                            dateFormat: DateFormat(
-                              '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
-                            ),
-                            decoration: const InputDecoration(
-                              hintText: 'Enter Date',
-                            ),
-                            firstDate: DateTime.now()
-                                .subtract(const Duration(minutes: 1)),
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 365)),
-                            onChanged: (DateTime? value) {
+                      const SizedBox(height: 10),
+                      reminder == true
+                          ? DateTimeFormField(
+                              dateFormat: DateFormat(
+                                '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: 'Enter Date',
+                              ),
+                              firstDate: DateTime.now()
+                                  .subtract(const Duration(minutes: 1)),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 365)),
+                              onChanged: (DateTime? value) {
+                                setState(() {
+                                  deadline = value;
+                                });
+                              },
+                            )
+                          : const SizedBox(),
+                      const SizedBox(height: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Checkbox(
+                            value: reminder,
+                            activeColor: Colors.green,
+                            onChanged: (bool? value) {
                               setState(() {
-                                deadline = value;
+                                reminder = value;
                               });
                             },
-                          )
-                        : const SizedBox(),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Checkbox(
-                          value: reminder,
-                          activeColor: Colors.green,
-                          onChanged: (bool? value) {
-                            setState(() {
-                              reminder = value;
-                            });
-                          },
-                        ),
-                        const Text(
-                          'Reminder',
-                        ),
-                      ],
-                    )
+                          ),
+                          const Text(
+                            'Reminder',
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        taskController.clear();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        if (taskController.text.isEmpty) {
+                          return;
+                        }
+                        _addTodo(
+                          task: taskController.text,
+                          deadline: reminder == true ? deadline : null,
+                          reminder: reminder,
+                        );
+                        taskController.clear();
+                        deadline = null;
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text('Add'),
+                    ),
                   ],
-                ),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      taskController.clear();
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Cancel'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      if (taskController.text.isEmpty) {
-                        return;
-                      }
-                      _addTodo(
-                        task: taskController.text,
-                        deadline: reminder == true ? deadline : null,
-                        reminder: reminder,
-                      );
-                      taskController.clear();
-                      deadline = null;
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text('Add'),
-                  ),
-                ],
-              );
-            },
+                );
+              },
+            ),
           ),
         );
       },
