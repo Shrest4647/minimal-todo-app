@@ -38,7 +38,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
   final _easyDateTimelineController = EasyInfiniteDateTimelineController();
   TextEditingController taskController = TextEditingController();
   DateTime? deadline = DateTime.now().add(const Duration(hours: 2));
-  bool? reminder = true;
+  bool? reminder = false;
   @override
   void initState() {
     super.initState();
@@ -350,36 +350,34 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   children: [
                     TextField(
                       controller: taskController,
+    
+                      
                       minLines: 1,
-                      style: GoogleFonts.caveat(),
                       keyboardType: TextInputType.multiline,
-                      decoration: InputDecoration(
-                        hintStyle: GoogleFonts.caveat(),
+                      decoration: const InputDecoration(
                         hintText: 'Enter task',
                       ),
                     ),
                     const SizedBox(height: 10),
-                    DateTimeFormField(
-                      initialValue: deadline,
-                      dateFormat: DateFormat(
-                        '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
-                      ),
-                      style: GoogleFonts.caveat(
-                        color: Colors.black54,
-                        fontSize: 16,
-                      ),
-                      decoration: const InputDecoration(
-                        hintText: 'Enter Date',
-                      ),
-                      firstDate: DateTime.now().add(const Duration(minutes: 1)),
-                      lastDate: DateTime.now().add(const Duration(days: 365)),
-                      initialPickerDateTime: deadline,
-                      onChanged: (DateTime? value) {
-                        setState(() {
-                          deadline = value;
-                        });
-                      },
-                    ),
+                    reminder == true
+                        ? DateTimeFormField(
+                            dateFormat: DateFormat(
+                              '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
+                            ),
+                            decoration: const InputDecoration(
+                              hintText: 'Enter Date',
+                            ),
+                            firstDate: DateTime.now()
+                                .subtract(const Duration(minutes: 1)),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
+                            onChanged: (DateTime? value) {
+                              setState(() {
+                                deadline = value;
+                              });
+                            },
+                          )
+                        : const SizedBox(),
                     const SizedBox(height: 10),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
@@ -393,11 +391,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
                             });
                           },
                         ),
-                        Text(
+                        const Text(
                           'Reminder',
-                          style: GoogleFonts.caveat().copyWith(
-                            fontSize: 14,
-                          ),
                         ),
                       ],
                     )
@@ -413,12 +408,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   ),
                   TextButton(
                     onPressed: () {
+                      if (taskController.text.isEmpty) {
+                        return;
+                      }
                       _addTodo(
                         task: taskController.text,
-                        deadline: deadline,
+                        deadline: reminder == true ? deadline : null,
                         reminder: reminder,
                       );
                       taskController.clear();
+                      deadline = null;
                       Navigator.of(context).pop();
                     },
                     child: const Text('Add'),
