@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
 class DaySelector extends StatefulWidget {
@@ -72,7 +71,7 @@ class _DaySelectorState extends State<DaySelector> {
             Text(
               DateFormat(DateFormat.ABBR_MONTH_WEEKDAY_DAY).format(_activeDay),
               textAlign: TextAlign.left,
-              style: GoogleFonts.satisfy().copyWith(
+              style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
