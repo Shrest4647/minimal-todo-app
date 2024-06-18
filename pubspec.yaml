@@ -4,7 +4,7 @@ description: "Minimalistic Todo App in Flutter"
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.0.0+2
+version: 1.0.1
 
 environment:
   sdk: '>=3.4.0-282.3.beta <4.0.0'
