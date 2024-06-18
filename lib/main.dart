@@ -14,11 +14,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Todo List App',
+      title: 'Tasklite',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        fontFamily: GoogleFonts.satisfy().fontFamily,
+        textTheme: GoogleFonts.satisfyTextTheme(),
       ),
       home: const TodoListScreen(),
     );
@@ -40,11 +40,18 @@ class _TodoListScreenState extends State<TodoListScreen> {
   TextEditingController taskController = TextEditingController();
   DateTime? deadline = DateTime.now().add(const Duration(hours: 2));
   bool? reminder = false;
+  bool _showTimeline = false;
   @override
   void initState() {
     super.initState();
     activeDate = DateTime.now();
     _initDatabase();
+  }
+
+  void _toggleTimeline() {
+    setState(() {
+      _showTimeline = !_showTimeline;
+    });
   }
 
   Future<void> _initDatabase() async {
@@ -170,10 +177,10 @@ class _TodoListScreenState extends State<TodoListScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Todo List',
-          style: GoogleFonts.poly().copyWith(
-            fontSize: 24,
+        title: const Text(
+          'Tasklite',
+          style: TextStyle(
+            fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -184,59 +191,84 @@ class _TodoListScreenState extends State<TodoListScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    _easyDateTimelineController.animateToCurrentData();
-                  },
-                  child: Text(
-                    "Today",
-                    textAlign: TextAlign.left,
-                    style: GoogleFonts.satisfy().copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.withOpacity(0.5),
+                    width: 2,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {
-                    _easyDateTimelineController.animateToDate(activeDate);
-                  },
-                  child: Text(
-                    DateFormat(DateFormat.ABBR_MONTH_WEEKDAY_DAY)
-                        .format(activeDate),
-                    textAlign: TextAlign.left,
-                    style: GoogleFonts.satisfy().copyWith(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      // set current date to today
+                      setState(() {
+                        activeDate = DateTime.now();
+                        _loadTodos();
+                        if (_showTimeline) {
+                          _easyDateTimelineController.animateToCurrentData();
+                        }
+                      });
+                    },
+                    child: const Text(
+                      "Today",
+                      textAlign: TextAlign.left,
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                  TextButton.icon(
+                    onPressed: () {
+                      _toggleTimeline();
+                    },
+                    icon: _showTimeline
+                        ? const Icon(Icons.arrow_drop_up)
+                        : const Icon(Icons.arrow_drop_down),
+                    label: Text(
+                      DateFormat(DateFormat.ABBR_MONTH_WEEKDAY_DAY)
+                          .format(activeDate),
+                      textAlign: TextAlign.left,
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          EasyInfiniteDateTimeLine(
-            selectionMode: const SelectionMode.autoCenter(),
-            controller: _easyDateTimelineController,
-            focusDate: activeDate,
-            firstDate: DateTime(2000, 1, 1),
-            lastDate: DateTime.now().add(const Duration(days: 30)),
-            onDateChange: (selectedDate) {
-              activeDate = selectedDate;
-              _loadTodos();
-              setState(() {});
-            },
-            showTimelineHeader: false,
+          Visibility(
+            visible: _showTimeline,
+            child: EasyInfiniteDateTimeLine(
+              selectionMode: const SelectionMode.autoCenter(),
+              controller: _easyDateTimelineController,
+              focusDate: activeDate,
+              firstDate: DateTime(2000, 1, 1),
+              lastDate: DateTime.now().add(const Duration(days: 30)),
+              onDateChange: (selectedDate) {
+                activeDate = selectedDate;
+                _loadTodos();
+                setState(() {});
+              },
+              showTimelineHeader: false,
+            ),
           ),
           const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 12.0),
             child: Text(
               "Tasks",
               textAlign: TextAlign.left,
-              style: GoogleFonts.caveat().copyWith(
+              style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -351,9 +383,8 @@ class _TodoListScreenState extends State<TodoListScreen> {
             child: StatefulBuilder(
               builder: (context, setState) {
                 return AlertDialog(
-                  title: Text(
+                  title: const Text(
                     'Add Todo',
-                    style: GoogleFonts.satisfy(),
                   ),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -390,22 +421,25 @@ class _TodoListScreenState extends State<TodoListScreen> {
                             )
                           : const SizedBox(),
                       const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Checkbox(
-                            value: reminder,
-                            activeColor: Colors.green,
-                            onChanged: (bool? value) {
-                              setState(() {
-                                reminder = value;
-                              });
-                            },
-                          ),
-                          const Text(
-                            'Reminder',
-                          ),
-                        ],
+                      Visibility(
+                        visible: false,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            Checkbox(
+                              value: reminder,
+                              activeColor: Colors.green,
+                              onChanged: (bool? value) {
+                                setState(() {
+                                  reminder = value;
+                                });
+                              },
+                            ),
+                            const Text(
+                              'Reminder',
+                            ),
+                          ],
+                        ),
                       )
                     ],
                   ),
