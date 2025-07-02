@@ -4,7 +4,6 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:easy_date_timeline/easy_date_timeline.dart';
-import 'package:date_field/date_field.dart';
 
 void main() => runApp(const MyApp());
 
@@ -402,22 +401,31 @@ class _TodoListScreenState extends State<TodoListScreen> {
                       ),
                       const SizedBox(height: 10),
                       reminder == true
-                          ? DateTimeFormField(
-                              dateFormat: DateFormat(
-                                '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
-                              ),
-                              decoration: const InputDecoration(
-                                hintText: 'Enter Date',
-                              ),
-                              firstDate: DateTime.now()
-                                  .subtract(const Duration(minutes: 1)),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
-                              onChanged: (DateTime? value) {
-                                setState(() {
-                                  deadline = value;
-                                });
-                              },
+                          ? Column(
+                              children: [
+                                TextButton(
+                                  onPressed: () async {
+                                    final selectedDate = await showDatePicker(
+                                      context: context,
+                                      initialDate: deadline ?? DateTime.now(),
+                                      firstDate: DateTime.now()
+                                          .subtract(const Duration(minutes: 1)),
+                                      lastDate: DateTime.now()
+                                          .add(const Duration(days: 365)),
+                                    );
+                                    if (selectedDate != null) {
+                                      setState(() {
+                                        deadline = selectedDate;
+                                      });
+                                    }
+                                  },
+                                  child: Text(deadline == null
+                                      ? 'Select Date'
+                                      : DateFormat(
+                                          '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
+                                        ).format(deadline!)),
+                                ),
+                              ],
                             )
                           : const SizedBox(),
                       const SizedBox(height: 10),
