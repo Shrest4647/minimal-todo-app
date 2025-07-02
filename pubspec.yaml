@@ -2,20 +2,20 @@ name: minimalistic_todo_app
 description: "Minimalistic Todo App in Flutter"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
 
 version: 1.0.1
 
 environment:
-  sdk: '>=3.4.0-282.3.beta <4.0.0'
+  sdk: ">=3.4.0-282.3.beta <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.6
-  path: ^1.9.0
   google_fonts: ^6.2.1
+  path: ^1.9.0
   sqflite: ^2.3.3+1
   intl: ^0.20.2
   easy_date_timeline: ^2.0.9
@@ -51,7 +51,5 @@ flutter:
 
   # To add assets to your application, add an assets section, like this:
   assets:
-    - assets/icons/
     - assets/images/
-    - google_fonts/
-
+    - assets/icons/

@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'package:easy_date_timeline/easy_date_timeline.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'components/add_todo_dialog.dart';
+import 'models/todo.dart';
 
 void main() => runApp(const MyApp());
 
@@ -17,7 +21,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        textTheme: GoogleFonts.satisfyTextTheme(),
+        textTheme: GoogleFonts.ralewayTextTheme(),
       ),
       home: const TodoListScreen(),
     );
@@ -36,9 +40,6 @@ class _TodoListScreenState extends State<TodoListScreen> {
   late DateTime activeDate;
   Database? _database;
   final _easyDateTimelineController = EasyInfiniteDateTimelineController();
-  TextEditingController taskController = TextEditingController();
-  DateTime? deadline = DateTime.now().add(const Duration(hours: 2));
-  bool? reminder = false;
   bool _showTimeline = false;
   @override
   void initState() {
@@ -59,15 +60,15 @@ class _TodoListScreenState extends State<TodoListScreen> {
 
     _database = await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: (db, version) {
         db.execute(
-          'CREATE TABLE todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed INTEGER, deadline INTEGER NULL, created INTEGER NULL, updated INTEGER NULL, completed_at INTEGER NULL)',
+          'CREATE TABLE todos (id INTEGER PRIMARY KEY AUTOINCREMENT, task TEXT, completed INTEGER, deadline INTEGER NULL, created INTEGER NULL, updated INTEGER NULL, completed_at INTEGER NULL, reminder INTEGER NULL)',
         );
       },
       onUpgrade: (db, oldVersion, newVersion) {
-        if (oldVersion < 2) {
-          // "Upgrading database from version $oldVersion to $newVersion"
+        if (oldVersion < 3) {
+          db.execute('ALTER TABLE todos ADD COLUMN reminder INTEGER NULL');
         }
       },
     );
@@ -113,6 +114,11 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   ? null
                   : DateTime.fromMillisecondsSinceEpoch(
                       map['updated'].toInt() * 1000),
+              completedAt: map['completed_at'] == null
+                  ? null
+                  : DateTime.fromMillisecondsSinceEpoch(
+                      map['completed_at'].toInt() * 1000),
+              reminder: map['reminder'] == 1,
             )),
       );
     });
@@ -134,6 +140,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
             1000,
         'created': DateTime.now().millisecondsSinceEpoch ~/ 1000,
         'updated': DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        'reminder': reminder ?? false,
       },
     );
     _loadTodos();
@@ -142,7 +149,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
   Future<void> _updateTodo(Todo todo) async {
     await _database!.update(
       'todos',
-      {'completed': todo.completed ? 1 : 0},
+      {
+        'completed': todo.completed ? 1 : 0,
+        'completed_at': todo.completed
+            ? DateTime.now().millisecondsSinceEpoch ~/ 1000
+            : null,
+      },
       where: 'id = ?',
       whereArgs: [todo.id],
     );
@@ -195,7 +207,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
               decoration: BoxDecoration(
                 border: Border(
                   bottom: BorderSide(
-                    color: Colors.grey.withOpacity(0.5),
+                    color: Colors.grey.withValues(alpha: 0.5),
                     width: 2,
                   ),
                 ),
@@ -284,9 +296,9 @@ class _TodoListScreenState extends State<TodoListScreen> {
                     title: SizedBox(
                       height: 100,
                       child: Text(
-                        "--- End of List ---",
+                        "✨ All caught up! Time for a break! ✨",
                         textAlign: TextAlign.center,
-                        style: GoogleFonts.caveat().copyWith(
+                        style: GoogleFonts.raleway(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                         ),
@@ -309,7 +321,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                   ),
                   title: Text(
                     todo.task,
-                    style: GoogleFonts.caveat().copyWith(
+                    style: GoogleFonts.raleway(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       decoration: todo.completed
@@ -331,22 +343,29 @@ class _TodoListScreenState extends State<TodoListScreen> {
                         DateFormat(
                                 '${DateFormat.ABBR_MONTH_DAY} ${DateFormat.HOUR24_MINUTE}')
                             .format(todo.deadline!),
-                        style: GoogleFonts.caveat().copyWith(
+                        style: GoogleFonts.raleway(
                           fontSize: 14,
                           fontWeight: FontWeight.normal,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      // const Padding(
-                      //   padding: EdgeInsets.only(
-                      //     left: 8.0,
-                      //   ),
-                      //   child: Icon(
-                      //     Icons.notification_important,
-                      //     color: Colors.pinkAccent,
-                      //     size: 16,
-                      //   ),
-                      // ),
+                      Visibility(
+                        visible: todo.reminder ?? false,
+                        child: const Padding(
+                          padding: EdgeInsets.only(
+                            left: 8.0,
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.notification_important,
+                                color: Colors.pinkAccent,
+                                size: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                   trailing: IconButton(
@@ -377,135 +396,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
     showDialog(
       context: context,
       builder: (context) {
-        return Center(
-          child: SingleChildScrollView(
-            child: StatefulBuilder(
-              builder: (context, setState) {
-                return AlertDialog(
-                  title: const Text(
-                    'Add Todo',
-                  ),
-                  content: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [
-                      TextField(
-                        controller: taskController,
-                        minLines: 1,
-                        textCapitalization: TextCapitalization.sentences,
-                        keyboardType: TextInputType.multiline,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter task',
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      reminder == true
-                          ? Column(
-                              children: [
-                                TextButton(
-                                  onPressed: () async {
-                                    final selectedDate = await showDatePicker(
-                                      context: context,
-                                      initialDate: deadline ?? DateTime.now(),
-                                      firstDate: DateTime.now()
-                                          .subtract(const Duration(minutes: 1)),
-                                      lastDate: DateTime.now()
-                                          .add(const Duration(days: 365)),
-                                    );
-                                    if (selectedDate != null) {
-                                      setState(() {
-                                        deadline = selectedDate;
-                                      });
-                                    }
-                                  },
-                                  child: Text(deadline == null
-                                      ? 'Select Date'
-                                      : DateFormat(
-                                          '${DateFormat.ABBR_MONTH_DAY}, ${DateFormat.ABBR_WEEKDAY} ${DateFormat.HOUR24}:${DateFormat.MINUTE}',
-                                        ).format(deadline!)),
-                                ),
-                              ],
-                            )
-                          : const SizedBox(),
-                      const SizedBox(height: 10),
-                      Visibility(
-                        visible: false,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Checkbox(
-                              value: reminder,
-                              activeColor: Colors.green,
-                              onChanged: (bool? value) {
-                                setState(() {
-                                  reminder = value;
-                                });
-                              },
-                            ),
-                            const Text(
-                              'Reminder',
-                            ),
-                          ],
-                        ),
-                      )
-                    ],
-                  ),
-                  actions: <Widget>[
-                    TextButton(
-                      onPressed: () {
-                        taskController.clear();
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        if (taskController.text.isEmpty) {
-                          return;
-                        }
-                        _addTodo(
-                          task: taskController.text,
-                          deadline: reminder == true ? deadline : null,
-                          reminder: reminder,
-                        );
-                        taskController.clear();
-                        deadline = null;
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text('Add'),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+        return AddTodoDialog(
+          onAdd: (task, deadline, reminder) {
+            _addTodo(
+              task: task,
+              deadline: deadline,
+              reminder: reminder,
+            );
+          },
         );
       },
     );
-  }
-}
-
-class Todo {
-  final int id;
-  final String task;
-  bool completed;
-  DateTime? deadline;
-  DateTime? created;
-  DateTime? updated;
-  DateTime? completedAt;
-
-  Todo({
-    required this.id,
-    required this.task,
-    required this.completed,
-    this.deadline,
-    this.created,
-    this.updated,
-    this.completedAt,
-  }) {
-    created = created ?? DateTime.now();
-    deadline = deadline ?? created?.add(const Duration(days: 1));
-    updated = updated ?? created;
   }
 }

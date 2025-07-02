@@ -56,7 +56,7 @@ class _DaySelectorState extends State<DaySelector> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.5),
+            color: Colors.grey.withValues(alpha: 0.5),
             blurRadius: 2,
             offset: const Offset(0, 2),
           ),
@@ -107,8 +107,8 @@ class _DaySelectorState extends State<DaySelector> {
                             boxShadow: [
                               BoxShadow(
                                 color: isActive
-                                    ? Colors.blue.withOpacity(0.3)
-                                    : Colors.grey.withOpacity(0.1),
+                                    ? Colors.blue.withValues(alpha: 0.3)
+                                    : Colors.grey.withValues(alpha: 0.1),
                                 spreadRadius: 2,
                                 blurRadius: 5,
                                 offset: const Offset(0, 1),
